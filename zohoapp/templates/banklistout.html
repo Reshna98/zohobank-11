@@ -323,7 +323,7 @@
                              
                               
                                 <a href="" style="color: orange; height: 2rem; width: 2rem;"
-                                class="btn btn-warning text-dark p-2" onclick="window.print()">
+                                class="btn btn-warning text-dark p-2"  onclick="printSection('stmt')">
                                 <i class="fa fa-print"></i> </a>
                                 <a class="btn btn-warning text-dark p-2"  style="width: 6rem;" href="{% url 'bank_status' selected_bank.id %}"  id="sts">{{selected_bank.status}}</a>
                                 
@@ -842,7 +842,7 @@ location.reload();
                         
                         </div>
                     </div>
-                    <section class="product-area mt-4">
+                    <section class="product-area mt-4" id="stmt">
                     <!-- <div class="col-md-12"> -->
                          
                       <table  class="table table-hover">
@@ -922,9 +922,23 @@ location.reload();
                   </section>
                   </div>
                 </div> 
+                
+    <script>
+        function printSection(sectionId) {
+            var printContents = document.getElementById(sectionId).innerHTML;
+            var originalContents = document.body.innerHTML;
+        
+            document.body.innerHTML = printContents;
+        
+            window.print();
+        
+            document.body.innerHTML = originalContents;
+        }
+        </script>
+    
             
-
-                  <table id="Overview" class="table table-responsive mt-4  tabcontent"  style="display: inline-table;">
+                  
+                <table id="Overview" class="table table-responsive mt-4  tabcontent"  style="display: inline-table;">
                    
                       <thead>
                           <tr>
