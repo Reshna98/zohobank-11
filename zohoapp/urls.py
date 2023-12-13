@@ -497,7 +497,7 @@ urlpatterns = [
     path('change_vendor_status/<int:pk>', views.change_vendor_status, name='change_vendor_status'),
     
     #reshna-banking    
-     path('bank_home', views.bank_home, name='bank_home'),
+    path('bank_home', views.bank_home, name='bank_home'),
     path('create_bank', views.create_bank, name='create_bank'),
     path('edit_bank/<int:bank_id>', views.edit_bank, name='edit_bank'),
     path('bank_listout/<int:id>', views.bank_listout, name='bank_listout'),
@@ -508,10 +508,11 @@ urlpatterns = [
     path('bank_attachfile/<int:id>', views.bank_attachfile, name='bank_attachfile'),
     path('delete_bank/<int:bank_id>', views.delete_bank, name='delete_bank'),
     path('nameasc/', views.nameasc, name='nameasc'),
-     path('opnasc/', views.opnasc, name='opnasc'),
+    path('opnasc/', views.opnasc, name='opnasc'),
     # path('namedes/', views.namedes, name='namedes'),#remove
     path('view_nameasc/<int:id>/', views.view_nameasc, name='view_nameasc'),
-    path('view_namedes/<int:id>/', views.view_namedes, name='view_namedes'),
+    # path('view_namedes/<int:id>/', views.view_namedes, name='view_namedes'),remove
+    path('view_opn/<int:id>/', views.view_opn, name='view_opn'),
     path('bank_pdf/<int:id>/', views.bank_pdf, name='bank_pdf'),
     path('bank_status/<int:id>/', views.bank_status, name='bank_status'),
     path('check_duplicate_bank/', views.check_duplicate_bank, name='check_duplicate_bank'),#new
@@ -522,6 +523,10 @@ urlpatterns = [
     path('delete_transaction/<int:id>/', views.delete_transaction, name='delete_transaction'),#new
     path('active_banks/', views.active_banks, name='active_banks'),#new
     path('inactive_banks/', views.inactive_banks, name='inactive_banks'),#new
+    path('active_banks_view/<int:id>/', views.active_banks_view, name='active_banks_view'),#new
+    path('inactive_banks_view/<int:id>/', views.inactive_banks_view, name='inactive_banks_view'),#new
+    # path('bank_transactions/<int:id>/', views.bank_transactions, name='bank_transactions'),#new
+    
     
     path('load_balance_sheet/',views.load_balance_sheet,name='load_balance_sheet'),
     path('load_horizontal_balance_sheet/',views.load_horizontal_balance_sheet,name='load_horizontal_balance_sheet'),

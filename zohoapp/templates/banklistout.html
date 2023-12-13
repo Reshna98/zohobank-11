@@ -222,6 +222,7 @@
               <div class="col-md-6">
                   <input type="text" id="search" placeholder="Search..." class="form-control text-dark bg-light" autocomplete="off">
               </div>
+              
               <div class="col-md-6 d-flex justify-content-end align-items-start gap-1">
                   <!-- <a class="btn fa fa-plus text-right px-1 py-1.5 " role="button" href="{%url 'create_bank'%}">
                     <span class="mt-2">&nbsp;&nbsp;NEW</span></a> -->
@@ -230,17 +231,27 @@
              
                 
                 <div class="col-md-12 d-flex justify-content-end align-items-start"> -->
+                    <a class="btn btn-primary mx-1" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                    role="button"> <i class="fas fa-sort-amount-up "></i> 
+                    </a>
+                    <div class="dropdown-menu ">
+                        <a class="dropdown-item" href="{%url 'bank_listout' selected_bank.id %}">All </a>
+                          <a class="dropdown-item" href="{%url 'view_nameasc' selected_bank.id %}">Name </a>
+                          <a class="dropdown-item" href="{%url 'view_opn' selected_bank.id %}">Opening Balance</a>
+                    </div>
                   <a class="btn btn-primary mx-1" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
                   role="button"><i class="fa fa-filter mt-0 mx-1 "></i>
                   </a>
-                  <div class="dropdown-menu ">
-                     
-                      <a class="dropdown-item" href="{%url 'view_nameasc' selected_bank.id %}">Name A-Z</a>
-                      <a class="dropdown-item" href="{%url 'view_namedes' selected_bank.id %}">Name Z-A</a>
+                 
+                      <div class="dropdown-menu ">
+                        <a class="dropdown-item" href="{%url 'bank_listout' selected_bank.id %}">All </a>
+                          <a class="dropdown-item" href="{%url 'active_banks_view' selected_bank.id %}">Active </a>
+                          <a class="dropdown-item" href="{%url 'inactive_banks_view' selected_bank.id %}">Inactive</a>
+                          </div>
                   
-                  </div>
                   <a class="btn btn-primary mr-1" role="button" href="{%url 'create_bank'%}"><i class="fa fa-plus"></i>
                     <span class="mt-2"></span></a>
+
               </div>
               
           </div>
@@ -891,23 +902,23 @@ location.reload();
                               <td  style="text-align: center;">{{ b.amount }}</td>
                               {% endif %} -->
                                {% if b.type == 'Bank To Cash Transfer' %}
-                              <td style="text-align: center;">&#8377;-{{ b.amount }}</td>
+                              <td style="text-align: center;">-{{ b.amount }}</td>
                               {% elif b.type == 'Cash To Bank Transfer' %}
-                              <td style="text-align: center;">&#8377;{{ b.amount }}</td>
+                              <td style="text-align: center;">{{ b.amount }}</td>
                               {% elif b.type == 'Adjust Bank Balance' %}
                                 {% if b.adjtype == 'Reduce Balance' %}
-                                    <td style="text-align: center;">&#8377;-{{b.amount}}</td>
+                                    <td style="text-align: center;">-{{b.amount}}</td>
                                 {% else %}
-                                    <td style="text-align: center;">&#8377;{{ b.amount}}</td>
+                                    <td style="text-align: center;">{{ b.amount}}</td>
                                 {% endif %}
                               {% elif b.type ==  'Bank To Bank Transfer' %}
                               
                                 {% if "To: " in b.name %}
-                                <td style="text-align: center;">&#8377;-{{ b.amount }}</td>
+                                <td style="text-align: center;">-{{ b.amount }}</td>
                                 {% elif "From: " in b.name %}
-                                <td style="text-align: center;">&#8377;{{ b.amount }}</td>
+                                <td style="text-align: center;">{{ b.amount }}</td>
                                 {% else %}
-                                <td style="text-align: center;">&#8377;{{ b.amount }}</td>
+                                <td style="text-align: center;">{{ b.amount }}</td>
                                  {% endif %}
                             
                               {% else %}

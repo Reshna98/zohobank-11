@@ -12670,7 +12670,7 @@ def change_vendor_status(request,pk):
     return redirect('view_vendor_details',pk=vdata.id)
     
     
-#Reshna-banking
+
 
 #Reshna-banking
 
@@ -12863,15 +12863,61 @@ def check_duplicate_bank(request):#new
 
 def bank_listout(request, id):
     cp = company_details.objects.get(user=request.user)
-    banks_list = Bankcreation.objects.filter(user=request.user)
-
     selected_bank = get_object_or_404(Bankcreation, id=id)
+    banks_list = Bankcreation.objects.filter(user=request.user)
     transactions_for_selected_bank = transactions.objects.filter(user=request.user, bank=selected_bank)
-    # print(transactions_for_selected_bank)
+
+    sales = SalesOrder.objects.filter(user=request.user, pay_method=selected_bank.name)
+
+    for order in sales:
+        existing_transaction = transactions.objects.filter(user=request.user, bank=selected_bank, type='Sales Order', name=order.customer.customerName, amount=order.advance, date=order.sales_date).exists()
+        if not existing_transaction:
+            customer_name = order.customer.customerName if order.customer else 'No Customer'
+            bank_transaction = transactions.objects.create(
+                bank=selected_bank,
+                amount=order.advance,
+                type='Sales Order',
+                name=customer_name,
+                user=request.user,
+                date=order.sales_date,
+                balance=selected_bank.balance + order.advance
+            )
+            bank_transaction.save()
+
+            selected_bank.balance = selected_bank.balance + order.advance
+            selected_bank.save()
+
+    return render(request, 'banklistout.html', {'company': cp, 'banks_list': banks_list, 'selected_bank': selected_bank, 'transactions_for_selected_bank': transactions_for_selected_bank})
+
+
+
+# def bank_listout(request, id):
+#     cp = company_details.objects.get(user=request.user)
+#     banks_list = Bankcreation.objects.filter(user=request.user)
+
+#     selected_bank = get_object_or_404(Bankcreation, id=id)
+#     transactions_for_selected_bank = transactions.objects.filter(user=request.user, bank=selected_bank)
+
+
+#     # Fetch sales orders paid with banks whose names are in banks_list
+#     sales = SalesOrder.objects.filter(user=request.user, pay_method__in=banks_list.values_list('name', flat=True))
     
+#     # Loop through the sales orders and create bank transactions
+#     for order in sales:
+#         customer_name = order.customer.customerName if order.customer else 'No Customer'
+#         bank_transaction = transactions.objects.create(
+#             bank=selected_bank,
+#             amount=order.advance,
+#             type='Sales Order',
+#             name=customer_name ,
+#             user=request.user ,
+#             date=order.sales_date,
+#             # balance=+amount
+#         )
+#         bank_transaction.save()
 
-    return render(request, 'banklistout.html', {'company': cp, 'banks_list': banks_list, 'selected_bank': selected_bank,'transactions_for_selected_bank':transactions_for_selected_bank})
-
+#     return render(request, 'banklistout.html', {'company': cp, 'banks_list': banks_list, 'selected_bank': selected_bank, 'transactions_for_selected_bank': transactions_for_selected_bank})
+  
 
 # def banktocash(request, id):
 #     if request.user.is_authenticated:
@@ -13364,70 +13410,33 @@ def bank_attachfile(request,id):
         return redirect('bank_listout',id=id)
 
 
-
-
-def nameasc(request):
+def nameasc(request):#replaced
     cp = company_details.objects.get(user = request.user)
-    bank =Bankcreation.objects.filter(user = request.user).order_by('name')
-    transactionss = transactions.objects.filter(user=request.user, bank=bank)
+    banks =Bankcreation.objects.filter(user = request.user).order_by('name')
     print(bank)
-    return render(request, 'bank_home.html', {'company': cp,' transactionss': transactionss})
+    return render(request, 'bank_home.html', {'company': cp,'banks':banks})
+
 
 def opnasc(request):#new
     cp = company_details.objects.get(user = request.user)
-    bank =Bankcreation.objects.filter(user = request.user).order_by('opn_bal')
+    banks =Bankcreation.objects.filter(user = request.user).order_by('opn_bal')
     print(bank)
-    return render(request, 'bank_home.html', {'company': cp,'bank':bank})
+    return render(request, 'bank_home.html', {'company': cp,'banks':banks})
 
 def view_nameasc(request,id):
     cp = company_details.objects.get(user = request.user)
     banks_list =Bankcreation.objects.filter(user = request.user).order_by('name')
-    print(banks_list)
     selected_bank = get_object_or_404(Bankcreation, id=id)
     transactions_for_selected_bank = transactions.objects.filter(user=request.user, bank=selected_bank)
-    print(transactions_for_selected_bank)
-    bank_balance = sum([transaction.amount for transaction in transactions_for_selected_bank])
+    return render(request, 'banklistout.html', {'company': cp, 'banks_list': banks_list, 'selected_bank': selected_bank,'transactions_for_selected_bank':transactions_for_selected_bank})
 
-    bank_balances = []
-    for bank in banks_list:
-        transactions_for_bank = transactions.objects.filter(user=request.user, bank=bank)
-        balance = sum([transaction.amount for transaction in transactions_for_bank])
-        bank_balances.append((bank, balance))
-    for transaction in transactions_for_selected_bank:
-            if transaction.type == 'Bank To Bank Transfer':
-                if transaction.amount > 0:
-                    transaction.display_text = f'From: {transaction.fromB}'
-                else:
-                    transaction.display_text = f'To: {transaction.toB}'
-            else:
-                transaction.display_text = '' 
-
-    return render(request, 'banklistout.html', {'company': cp, 'banks_list': banks_list, 'selected_bank': selected_bank, 'bank_balance': bank_balance, 'bank_balances': bank_balances ,'transactions_for_selected_bank':transactions_for_selected_bank})
-
-def view_namedes(request,id):
+def view_opn(request,id):#new
     cp = company_details.objects.get(user = request.user)
-    banks_list =Bankcreation.objects.filter(user = request.user).order_by('-name')
-    print(banks_list)
+    banks_list =Bankcreation.objects.filter(user = request.user).order_by('opn_bal')
     selected_bank = get_object_or_404(Bankcreation, id=id)
     transactions_for_selected_bank = transactions.objects.filter(user=request.user, bank=selected_bank)
-    print(transactions_for_selected_bank)
-    bank_balance = sum([transaction.amount for transaction in transactions_for_selected_bank])
-
-    bank_balances = []
-    for bank in banks_list:
-        transactions_for_bank = transactions.objects.filter(user=request.user, bank=bank)
-        balance = sum([transaction.amount for transaction in transactions_for_bank])
-        bank_balances.append((bank, balance))
-    for transaction in transactions_for_selected_bank:
-            if transaction.type == 'Bank To Bank Transfer':
-                if transaction.amount > 0:
-                    transaction.display_text = f'From: {transaction.fromB}'
-                else:
-                    transaction.display_text = f'To: {transaction.toB}'
-            else:
-                transaction.display_text = '' 
-
-    return render(request, 'banklistout.html', {'bankcompany': cp,'company': cp, 'banks_list': banks_list, 'selected_bank': selected_bank, 'bank_balance': bank_balance, 'bank_balances': bank_balances ,'transactions_for_selected_bank':transactions_for_selected_bank,})
+    return render(request, 'banklistout.html', {'company': cp, 'banks_list': banks_list, 'selected_bank': selected_bank,'transactions_for_selected_bank':transactions_for_selected_bank})
+  
 
 def bank_status(request, id):
     cp = company_details.objects.get(user=request.user)
@@ -13448,15 +13457,30 @@ def bank_status(request, id):
         # selected_bank.save()
     return render(request, 'banklistout.html', {'company': cp, 'banks_list': banks_list, 'selected_bank': selected_bank, 'transactions_for_selected_bank':transactions_for_selected_bank})
 
-def active_banks(request):
+def active_banks(request):#new
     cp = company_details.objects.get(user=request.user)
     banks = Bankcreation.objects.filter(status='Active',user=request.user)
     return render(request, 'bank_home.html', {'company': cp, 'banks': banks})
 
-def inactive_banks(request):
+def inactive_banks(request):#new
     cp = company_details.objects.get(user=request.user)
     banks = Bankcreation.objects.filter(status='Inactive',user=request.user)
     return render(request, 'bank_home.html', {'company': cp, 'banks': banks})
+
+def active_banks_view(request,id):#new
+    cp = company_details.objects.get(user=request.user)
+    banks_list= Bankcreation.objects.filter(status='Active',user=request.user)
+    selected_bank = get_object_or_404(Bankcreation, id=id)
+    transactions_for_selected_bank = transactions.objects.filter(user=request.user, bank=selected_bank)
+    return render(request, 'banklistout.html', {'company': cp, 'banks_list': banks_list, 'selected_bank': selected_bank,'transactions_for_selected_bank':transactions_for_selected_bank})
+
+def inactive_banks_view(request,id):#new
+    cp = company_details.objects.get(user=request.user)
+    banks_list = Bankcreation.objects.filter(status='Inactive',user=request.user)
+    selected_bank = get_object_or_404(Bankcreation, id=id)
+    transactions_for_selected_bank = transactions.objects.filter(user=request.user, bank=selected_bank)
+    return render(request, 'banklistout.html', {'company': cp, 'banks_list': banks_list, 'selected_bank': selected_bank,'transactions_for_selected_bank':transactions_for_selected_bank})
+   
 
 def bank_pdf(request, id):
     cp = company_details.objects.get(user=request.user)
@@ -13464,21 +13488,6 @@ def bank_pdf(request, id):
     selected_bank = get_object_or_404(Bankcreation, id=id)
     transactions_for_selected_bank = transactions.objects.filter(user=request.user, bank=selected_bank)
     print(transactions_for_selected_bank)
-    bank_balance = sum([transaction.amount for transaction in transactions_for_selected_bank])
-
-    bank_balances = []
-    for bank in banks_list:
-        transactions_for_bank = transactions.objects.filter(user=request.user, bank=bank)
-        balance = sum([transaction.amount for transaction in transactions_for_bank])
-        bank_balances.append((bank, balance))
-    for transaction in transactions_for_selected_bank:
-            if transaction.type == 'Bank To Bank Transfer':
-                if transaction.amount > 0:
-                    transaction.display_text = f'From: {transaction.fromB}'
-                else:
-                    transaction.display_text = f'To: {transaction.toB}'
-            else:
-                transaction.display_text = '' 
 
     script_directory = os.path.dirname(os.path.abspath(__file__))
     template_filename = 'banklistout.html'
@@ -13494,7 +13503,6 @@ def bank_pdf(request, id):
 
     context = {
     'company': cp, 'banks_list': banks_list, 'selected_bank': selected_bank, 
-    'bank_balance': bank_balance, 'bank_balances': bank_balances ,
     'transactions_for_selected_bank':transactions_for_selected_bank
     }
     html = template.render(Context(context))
@@ -13508,6 +13516,9 @@ def bank_pdf(request, id):
         return HttpResponse('We had some errors <pre>' + html + '</pre>')
     
     return response
+
+
+    
         
 @login_required(login_url='login')
 def vendor_credit_dropdown(request):
