@@ -12886,6 +12886,41 @@ def bank_listout(request, id):
 
             selected_bank.balance = selected_bank.balance + order.advance
             selected_bank.save()
+    # Fetch InvoicePayment entries associated with the selected bank's 
+    invoice_payments = InvoicePayment.objects.filter(payment_method=selected_bank.name)
+
+    for invoice_payment in invoice_payments:
+        # Get payment method and other payment-related details from InvoicePayment
+        payment_method = invoice_payment.payment_method
+        # ... Retrieve other payment details from InvoicePayment as needed
+
+        # Retrieve invoice details using the InvoicePayment's invoice foreign key
+        invoice = invoice_payment.invoice
+        date = invoice.inv_date
+        paid_amount = invoice.paid_amount
+        customer_name = invoice.customer.customerName if invoice.customer else 'No Customer'
+
+        # Create transaction records based on the invoice payment
+        if paid_amount > 0:
+            # Check if the transaction already exists
+            existing_transaction = transactions.objects.filter(user=request.user, bank=selected_bank, type='Invoice', name=customer_name, amount=paid_amount, date=date).exists()
+            if not existing_transaction:
+                # Create a transaction record
+                bank_transaction = transactions.objects.create(
+                    bank=selected_bank,
+                    amount=paid_amount,
+                    type='Invoice',
+                    name=customer_name,
+                    user=request.user,
+                    date=date,
+                    # ... other transaction details
+                    balance=selected_bank.balance + paid_amount  # Adjust the balance for payments
+                )
+                bank_transaction.save()
+
+                # Update the bank's balance
+                selected_bank.balance = selected_bank.balance + paid_amount
+                selected_bank.save()   
 
     return render(request, 'banklistout.html', {'company': cp, 'banks_list': banks_list, 'selected_bank': selected_bank, 'transactions_for_selected_bank': transactions_for_selected_bank})
 
