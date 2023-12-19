@@ -12886,26 +12886,21 @@ def bank_listout(request, id):
 
             selected_bank.balance = selected_bank.balance + order.advance
             selected_bank.save()
-    # Fetch InvoicePayment entries associated with the selected bank's 
     invoice_payments = InvoicePayment.objects.filter(payment_method=selected_bank.name)
 
     for invoice_payment in invoice_payments:
-        # Get payment method and other payment-related details from InvoicePayment
+     
         payment_method = invoice_payment.payment_method
-        # ... Retrieve other payment details from InvoicePayment as needed
-
-        # Retrieve invoice details using the InvoicePayment's invoice foreign key
+    
         invoice = invoice_payment.invoice
         date = invoice.inv_date
         paid_amount = invoice.paid_amount
         customer_name = invoice.customer.customerName if invoice.customer else 'No Customer'
 
-        # Create transaction records based on the invoice payment
         if paid_amount > 0:
-            # Check if the transaction already exists
+           
             existing_transaction = transactions.objects.filter(user=request.user, bank=selected_bank, type='Invoice', name=customer_name, amount=paid_amount, date=date).exists()
             if not existing_transaction:
-                # Create a transaction record
                 bank_transaction = transactions.objects.create(
                     bank=selected_bank,
                     amount=paid_amount,
@@ -12913,17 +12908,136 @@ def bank_listout(request, id):
                     name=customer_name,
                     user=request.user,
                     date=date,
-                    # ... other transaction details
-                    balance=selected_bank.balance + paid_amount  # Adjust the balance for payments
+    
+                    balance=selected_bank.balance + paid_amount  
                 )
                 bank_transaction.save()
 
-                # Update the bank's balance
                 selected_bank.balance = selected_bank.balance + paid_amount
                 selected_bank.save()   
 
+    rec_invoices= Recurring_invoice.objects.filter(user=request.user, payment_method=selected_bank.name)
+
+    for rec_invoice in rec_invoices:
+        existing_transaction = transactions.objects.filter(user=request.user, bank=selected_bank, type='Recurring Invoice', name=rec_invoice.cust_name.customerName, amount=rec_invoice.paid, date=rec_invoice.start).exists()
+        if not existing_transaction:
+            customer_name = rec_invoice.cust_name.customerName if rec_invoice.cust_name else 'No Customer'
+            bank_transactions = transactions.objects.create(
+                bank=selected_bank,
+                amount=rec_invoice.paid,
+                type='Recurring Invoice',
+                name=customer_name,
+                user=request.user,
+                date=rec_invoice.start,
+                balance=selected_bank.balance + rec_invoice.paid
+            )
+            bank_transactions.save()
+
+            selected_bank.balance = selected_bank.balance + rec_invoice.paid
+            selected_bank.save()
+    
+    rec_bills = recurring_bills.objects.filter(user=request.user, payment_method=selected_bank.name)
+
+    for rec_bill in rec_bills:
+        vendor_details = rec_bill.vendor_name.split("-")
+        print(vendor_details)
+
+        vendor_details = rec_bill.vendor_name.split()
+        vendor_id = vendor_details[0].strip() if vendor_details else None
+        vendor_name = ' '.join(vendor_details[1:]).strip() if len(vendor_details) > 1 else None
+
+        existing_transaction = transactions.objects.filter(
+        user=request.user,
+        bank=selected_bank,
+        type='Recurring Bill',
+        name=vendor_name,
+        amount=rec_bill.amt_paid,
+        date=rec_bill.start_date
+    ).exists()
+    
+        if not existing_transaction:
+            bank_transactions = transactions.objects.create(
+            bank=selected_bank,
+            amount=rec_bill.amt_paid,
+            type='Recurring Bill',
+            name=vendor_name,
+            user=request.user,
+            date=rec_bill.start_date,
+            balance=selected_bank.balance - rec_bill.amt_paid
+        )
+            bank_transactions.save()
+
+            selected_bank.balance = selected_bank.balance - rec_bill.amt_paid
+            selected_bank.save()
+
+    bills = PurchaseBills.objects.filter(user=request.user, payment_method=selected_bank.name)
+
+    for bill in bills:
+        existing_transaction = transactions.objects.filter(
+        user=request.user,
+        bank=selected_bank,
+        type='Bill',
+        name=bill.vendor_name,
+        amount=bill.amt_paid,
+        date=bill.bill_date
+    ).exists()
+    
+        if not existing_transaction:
+            bank_transactions = transactions.objects.create(
+            bank=selected_bank,
+            amount=bill.amt_paid,
+            type='Bill',
+            name=bill.vendor_name,
+            user=request.user,
+            date=bill.bill_date,
+            balance=selected_bank.balance - bill.amt_paid
+        )
+            bank_transactions.save()
+
+            selected_bank.balance = selected_bank.balance - bill.amt_paid
+            selected_bank.save()
+    
     return render(request, 'banklistout.html', {'company': cp, 'banks_list': banks_list, 'selected_bank': selected_bank, 'transactions_for_selected_bank': transactions_for_selected_bank})
 
+def sharebank(request,id):
+    if request.user:
+        try:
+            if request.method == 'POST':
+                emails_string = request.POST['email_ids']
+
+                # Split the string by commas and remove any leading or trailing whitespace
+                emails_list = [email.strip() for email in emails_string.split(',')]
+                email_message = request.POST['email_message']
+                # print(emails_list)
+
+                # account = Bankcreation.objects.get(id = id)
+                # trans = transactions.objects.filter(bank= account).order_by('-id')
+                # cmp = company_details.objects.get(user = request.user)
+                cp = company_details.objects.get(user=request.user)
+                selected_bank = get_object_or_404(Bankcreation, id=id)
+                banks_list = Bankcreation.objects.filter(user=request.user)
+                transactions_for_selected_bank = transactions.objects.filter(user=request.user, bank=selected_bank)
+
+                context = {'company': cp, 'banks_list': banks_list, 'selected_bank': selected_bank, 'transactions_for_selected_bank': transactions_for_selected_bank}
+                template_path = 'bank_stmtpdf.html'
+                template = get_template(template_path)
+
+                html  = template.render(context)
+                result = BytesIO()
+                pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)#, link_callback=fetch_resources)
+                pdf = result.getvalue()
+                filename = f'Statement - {selected_bank.name}.pdf'
+                subject = f"Transaction Statement - {selected_bank.name}"
+                email = EmailMessage(subject, f"Hi,\nPlease find the attached Statment for -{selected_bank.name}. \n{email_message}\n\n--\nRegards,\n{cp.company_name}\n{cp.address}\n{cp.city} - {cp.state}\n{cp.contact_number}", from_email=settings.EMAIL_HOST_USER, to=emails_list)
+                email.attach(filename, pdf, "application/pdf")
+                email.send(fail_silently=False)
+
+                messages.success(request, 'Statement has been shared via email successfully..!')
+                return redirect(bank_listout,id)
+        except Exception as e:
+            print(e)
+            messages.error(request, f'{e}')
+            return redirect(bank_listout, id)
 
 
 # def bank_listout(request, id):

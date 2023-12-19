@@ -525,7 +525,8 @@ urlpatterns = [
     path('inactive_banks/', views.inactive_banks, name='inactive_banks'),#new
     path('active_banks_view/<int:id>/', views.active_banks_view, name='active_banks_view'),#new
     path('inactive_banks_view/<int:id>/', views.inactive_banks_view, name='inactive_banks_view'),#new
-    # path('bank_transactions/<int:id>/', views.bank_transactions, name='bank_transactions'),#new
+    path('sharebank/<int:id>/', views.sharebank, name='sharebank'),#new
+   
     
     
     path('load_balance_sheet/',views.load_balance_sheet,name='load_balance_sheet'),
