@@ -128,8 +128,13 @@
             margin: 0;
             height: auto;
         }
-       
+       /* h6.no-print {
+            display: none;
+        } */
     }
+    /* .no-print {
+            display: none;
+        } */
   .card-custom {
     background-color: rgba(255, 255, 255, 0.5);
    /* height: 400px; */
@@ -342,7 +347,7 @@
                              
                               
                                 <a href="" style="color: orange; height: 2rem; width: 2rem;"
-                                class="btn btn-warning text-dark p-2"  onclick="printSection('stmt')">
+                                class="btn btn-warning text-dark p-2"  onclick="printCardBody()">
                                 <i class="fa fa-print"></i> </a>
                                 <a class="btn btn-warning text-dark p-2"  style="width: 6rem;" href="{% url 'bank_status' selected_bank.id %}"  id="sts">{{selected_bank.status}}</a>
                                 
@@ -490,7 +495,7 @@
                                     </div>
             
                                     <div class="row mt-3">
-                                        <div class="col-md-12">
+                                        <div class="col-md-6">
                                             <label for="description">Description:</label>
                                             <textarea name="description" class="form-control text-dark bg-light"
                                                       id="description" placeholder="Max. 500 characters"></textarea>
@@ -586,7 +591,7 @@
                                     </div>
             
                                     <div class="row mt-3">
-                                        <div class="col-md-12">
+                                        <div class="col-md-6">
                                             <label for="description">Description:</label>
                                             <textarea name="description" class="form-control text-dark bg-light"
                                                       id="description" placeholder="Max. 500 characters"></textarea>
@@ -688,7 +693,7 @@
                                     </div>
             
                                     <div class="row mt-3">
-                                        <div class="col-md-12">
+                                        <div class="col-md-6">
                                             <label for="description">Description:</label>
                                             <textarea name="description" class="form-control text-dark bg-light"
                                                       id="description" placeholder="Max. 500 characters"></textarea>
@@ -787,7 +792,7 @@
                       </div>
 
                       <div class="row mt-3">
-                          <div class="col-md-12">
+                          <div class="col-md-6">
                               <label for="description">Description:</label>
                               <textarea name="description" class="form-control text-dark bg-light"
                                         id="description" placeholder="Max. 500 characters"></textarea>
@@ -834,8 +839,10 @@ location.reload();
 });
 </script>
 
-<div class="card-body">
-             <h6>Transactions</h6>
+<div class="card-body" id="cardBodyToPrint">
+    <!-- <section class="product-area mt-4" id="stmt"> -->
+             <h6 class="no-print">Transactions</h6>
+             
               <div id="Template" class="print-only page tabcontent ">
                 <div class="row extra-info pt-3">
                     <div class="col-md-6">
@@ -847,12 +854,10 @@ location.reload();
                         </p>
                       </div>
                     <div class="col-md-6">
-                        <!-- <h2 class="text-uppercase text-dark text-center">Banking</h2> -->
+              
                         <section class="top-content  d-flex justify-content-end">
                             <div class="top-right">
-                                <!-- <div class="graphic-path">
-                                    <h5 style="color: black;">{{selected_bank.name}}</h5>
-                                </div> -->
+                               
                                 <div class="position-relative">
                                     <p style="color: black;font-weight: bolder; justify-content: end;"><span>Balance:{{selected_bank.balance}}</span></p>
                                 </div>
@@ -864,14 +869,15 @@ location.reload();
                     <section class="product-area mt-4" id="stmt">
                     <!-- <div class="col-md-12"> -->
                          
-                      <table  class="table table-hover">
+                      <table  class="table">
                         <h6 style="color: black;">Transactions</h6>
                           <thead >
                               <tr>
                                   <th style="text-align: center;">#</th>
+                                  <th style="text-align: center;">DATE</th>
                                   <th style="text-align: center;">TYPE</th>
                                   <th style="text-align: center;">NAME</th>
-                                  <th style="text-align: center;">DATE</th>
+                                
                                   <th style="text-align: center;">AMOUNT</th>
                                   <th style="text-align: center;">BALANCE</th>
                               
@@ -882,33 +888,10 @@ location.reload();
                           
                               <tr>
                               <td  style="text-align: center;">{{ forloop.counter }}</td>
+                              <td  style="text-align: center;">{{ b.date }}</td>
                               <td  style="text-align: center;" >{{b.type}}</td>
                               <td  style="text-align: center;">{{b.name}}</td>
-                              <td  style="text-align: center;">{{ b.date }}</td>
-                              <!-- <td  style="text-align: center;">{{ b.amount }}</td> -->
-                              <!-- {% if b.type == 'Bank To Cash Transfer' %}
-                              <td  style="text-align: center;">-{{ b.amount }}</td>
-                              {% elif b.type == 'Cash To Bank Transfer' %}
-                              <td  style="text-align: center;">{{ b.amount }}</td>
-                              {% elif b.type == 'Adjust Bank Balance' %}
-                                {% if b.adjtype == 'Reduce Balance' %}
-                                    <td style="text-align: center;">-{{b.amount}}</td>
-                                {% else %}
-                                    <td style="text-align: center;">{{ b.amount}}</td>
-                                {% endif %}
-                              {% elif b.type ==  'Bank To Bank Transfer ' %}
-                              
-                                {% if "To: " in b.name %}
-                                <td style="text-align: center;">{{ b.amount }}</td>
-                                {% elif "From: " in b.name %}
-                                <td style="text-align: center;">-{{ b.amount }}</td>
-                                {% else %}
-                                <td style="text-align: center;">{{ b.amount }}</td>
-                                 {% endif %}
-                            
-                              {% else %}
-                              <td  style="text-align: center;">{{ b.amount }}</td>
-                              {% endif %} -->
+            
                                {% if b.type == 'Bank To Cash Transfer' %}
                               <td style="text-align: center;">-{{ b.amount }}</td>
                               {% elif b.type == 'Cash To Bank Transfer' %}
@@ -941,7 +924,7 @@ location.reload();
                   </section>
                   </div>
                 </div> 
-                
+<!--                 
     <script>
         function printSection(sectionId) {
             var printContents = document.getElementById(sectionId).innerHTML;
@@ -953,6 +936,18 @@ location.reload();
         
             document.body.innerHTML = originalContents;
         }
+        </script> -->
+        <script>
+            function printCardBody() {
+                var printContents = document.getElementById('cardBodyToPrint').innerHTML;
+                var originalContents = document.body.innerHTML;
+        
+                document.body.innerHTML = printContents;
+        
+                window.print();
+        
+                document.body.innerHTML = originalContents;
+            }
         </script>
     
             
@@ -961,9 +956,11 @@ location.reload();
                    
                       <thead>
                           <tr>
+                            <th class="text-white">#</th>
+                            <th  class="text-white">DATE</th>
                               <th  class="text-white">TYPE</th>
                               <th  class="text-white">NAME</th>
-                              <th  class="text-white">DATE</th>
+                           
                               <th  class="text-white">AMOUNT</th>
                               <th  class="text-white">ACTION</th>
                           
@@ -973,6 +970,8 @@ location.reload();
                           {% for b in transactions_for_selected_bank %}
                       
                           <tr>
+                            <td  class="text-white">{{ forloop.counter }}</td>
+                          <td  class="text-white">{{ b.date }}</td>
                           <td class="text-white">{{b.type}}</td>
                          
                           <td  class="text-white">
@@ -982,8 +981,8 @@ location.reload();
                           </td>
                           
                         
-                        
-                          <td  class="text-white">{{ b.date }}</td>
+<!--                         
+                          <td  class="text-white">{{ b.date }}</td> -->
                           <!-- <td  class="text-white">&#8377;{{ b.amount }}</td> -->
                           {% if b.type == 'Bank To Cash Transfer' %}
                               <td class="text-white">&#8377;-{{ b.amount }}</td>

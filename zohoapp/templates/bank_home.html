@@ -201,7 +201,7 @@
                                 <th>IFSC CODE</th>
                                 <th>ACCOUNT NUMBER</th>
                                 <th>BRANCH</th>
-                               
+                                <th>DATE</th>
                                 <th>OPENING BALANCE</th>
                                 <th>BALANCE</th>
                                 <th>STATUS</th>
@@ -220,6 +220,7 @@
                           
                             <td><a href="{% url 'bank_listout' bank.id %}">{{ bank.ac_no}}</a></td>
                             <td><a href="{% url 'bank_listout' bank.id %}">{{ bank.branch}}</a></td>
+                            <td><a href="{% url 'bank_listout' bank.id %}">{{ bank.date}}</a></td>
                             <td ><a href="{% url 'bank_listout' bank.id %}">&#8377;{{ bank.opn_bal }}</a></td>
                             <td ><a href="{% url 'bank_listout' bank.id %}">&#8377;{{bank.balance }}</a></td>
                             <td ><a href="{% url 'bank_listout' bank.id %}">{{bank.status }}</a></td>
