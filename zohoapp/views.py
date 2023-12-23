@@ -13679,61 +13679,161 @@ def edit_adjustbankbalance(request, id):
 #         cp = company_details.objects.get(user=request.user)
 #         return render(request, 'banklistout.html', {'company': cp, 'bank': b})
 
+# def edit_bank_to_bank_transfer(request, id):
+#     if request.user.is_authenticated and request.method == 'POST':
+#         date = request.POST.get('date')
+#         fromB = request.POST.get('fromB')
+#         toB = request.POST.get('toB')
+#         amount = float(request.POST.get('amount', 0.0))
+#         description = request.POST.get('description')
+
+#         try:
+#             # Fetch the original transaction
+#             original_transaction = transactions.objects.get(id=id, type='Bank To Bank Transfer')
+
+#             # Fetch the related banks
+#             from_bank = Bankcreation.objects.get(id=fromB)
+#             to_bank = Bankcreation.objects.get(id=toB)
+
+#             # Fetch the previous transaction for the source bank
+#             previous_from_transaction = transactions.objects.filter(bank=from_bank).exclude(id=id).last()
+
+#             if previous_from_transaction:
+#                 previous_from_balance = previous_from_transaction.balance
+#             else:
+#                 previous_from_balance = from_bank.balance
+
+#             # Fetch the previous transaction for the destination bank
+#             previous_to_transaction = transactions.objects.filter(bank=to_bank).exclude(id=id).last()
+
+#             if previous_to_transaction:
+#                 previous_to_balance = previous_to_transaction.balance
+#             else:
+#                 previous_to_balance = to_bank.balance
+
+#             # Calculate amount differences
+#             amount_difference = amount - original_transaction.amount
+
+#             # Update bank balances
+#             from_bank.balance += original_transaction.amount  # Reverse old 'from' bank transaction
+#             to_bank.balance -= original_transaction.amount  # Reverse old 'to' bank transaction
+
+#             from_bank.balance -= amount  # Update 'from' bank balance with new amount
+#             to_bank.balance += amount  # Update 'to' bank balance with new amount
+
+#             from_bank.save()
+#             to_bank.save()
+
+#             # Update 'from' bank transaction
+#             original_transaction.date = date
+#             original_transaction.fromB = from_bank.name
+#             original_transaction.toB = to_bank.name
+#             original_transaction.amount = amount
+#             original_transaction.balance = previous_from_balance - amount + amount_difference
+#             original_transaction.description = description
+#             original_transaction.name = 'To: ' + to_bank.name
+#             original_transaction.save()
+
+#             # Update 'to' bank transaction
+#             to_transaction = transactions(
+#                 user=request.user,
+#                 fromB=from_bank.name,
+#                 toB=to_bank.name,
+#                 amount=amount,
+#                 description=description,
+#                 date=date,
+#                 type='Bank To Bank Transfer',
+#                 bank=to_bank,
+#                 balance=previous_to_balance + amount - amount_difference,
+#                 name='From: ' + from_bank.name
+#             )
+#             to_transaction.save()
+#             bank_id = original_transaction.bank.id
+
+#             return redirect('bank_listout', id=bank_id)
+
+#         except transactions.DoesNotExist:
+#             # Handle case if transaction is not found
+#             # Redirect or display an error message
+#             pass
+
+#     # Handle GET requests or invalid transactions
+#     b = Bankcreation.objects.filter(user=request.user)
+#     cp = company_details.objects.get(user=request.user)
+#     return render(request, 'banklistout.html', {'company': cp, 'bank': b})
 def edit_bank_to_bank_transfer(request, id):
     if request.user.is_authenticated and request.method == 'POST':
         date = request.POST.get('date')
-        fromB = request.POST.get('fromB')
-        toB = request.POST.get('toB')
+        fromB_id = request.POST.get('fromB') 
+        toB_id = request.POST.get('toB')  
         amount = float(request.POST.get('amount', 0.0))
         description = request.POST.get('description')
 
-        from_bank = Bankcreation.objects.get(id=fromB)
-        to_bank = Bankcreation.objects.get(id=toB)
+        from_bank = Bankcreation.objects.get(id=fromB_id)
+        to_bank = Bankcreation.objects.get(id=toB_id)
 
-        from_transaction = transactions.objects.get(id=id, type='Bank To Bank Transfer', bank=from_bank)
-        to_transaction = transactions.objects.get(id=id, type='Bank To Bank Transfer', bank=to_bank)
+        from_name = from_bank.name
+        to_name = to_bank.name
 
-        # Get the previous balances of both banks
-        previous_from_balance = from_transaction.balance - from_transaction.amount
-        previous_to_balance = to_transaction.balance - to_transaction.amount
+        try:
+            original_transaction_from = transactions.objects.get(
+                id=id, type='Bank To Bank Transfer', fromB=from_name
+            )
+            original_transaction_to = transactions.objects.get(
+                id=id, type='Bank To Bank Transfer', toB=to_name
+            )
 
-        # Calculate the amount difference
-        amount_difference = amount - from_transaction.amount
+            from_bank.balance += original_transaction_from.amount
+            to_bank.balance -= original_transaction_to.amount
 
-        # Update bank balances
-        from_bank.balance += from_transaction.amount  # Revert previous 'from' transaction amount
-        to_bank.balance -= to_transaction.amount  # Revert previous 'to' transaction amount
+            from_bank.balance -= amount
+            to_bank.balance += amount
 
-        from_bank.balance -= amount  # Update 'from' bank balance with new amount
-        to_bank.balance += amount  # Update 'to' bank balance with new amount
+            from_bank.save()
+            to_bank.save()
 
-        from_bank.save()
-        to_bank.save()
+            amount_difference_from = amount - original_transaction_from.amount
+            amount_difference_to = amount - original_transaction_to.amount
 
-        # Update the 'from' bank transaction
-        from_transaction.date = date
-        from_transaction.fromB = from_bank.name
-        from_transaction.toB = to_bank.name
-        from_transaction.amount = amount
-        from_transaction.balance = previous_from_balance + amount_difference
-        from_transaction.description = description
-        from_transaction.save()
+            original_transaction_from.date = date
+            original_transaction_from.amount = amount
+            original_transaction_from.description = description
+            original_transaction_from.balance = original_transaction_from.balance + amount_difference_from
+            original_transaction_from.save()
 
-        # Update the 'to' bank transaction
-        to_transaction.date = date
-        to_transaction.fromB = from_bank.name
-        to_transaction.toB = to_bank.name
-        to_transaction.amount = amount
-        to_transaction.balance = previous_to_balance + amount_difference
-        to_transaction.description = description
-        to_transaction.save()
+            original_transaction_to.date = date
+            original_transaction_to.amount = amount
+            original_transaction_to.description = description
+            original_transaction_to.balance = original_transaction_to.balance - amount_difference_to
+            original_transaction_to.save()
 
-        bank_id = from_transaction.bank.id
-        return redirect('bank_listout', id=id)
-    else:
-        b = Bankcreation.objects.filter(user=request.user)
-        cp = company_details.objects.get(user=request.user)
-        return render(request, 'banklistout.html', {'company': cp, 'bank': b})
+            subsequent_transactions_from = transactions.objects.filter(
+                bank=from_bank, id__gt=id
+            )
+            for transaction in subsequent_transactions_from:
+                print(transaction.id)
+                transaction.balance += amount_difference_from
+                transaction.save()
+
+            subsequent_transactions_to = transactions.objects.filter(
+                bank=to_bank, id__gt=id
+            )
+            for transaction in subsequent_transactions_to:
+                print(transaction.id)
+                transaction.balance -= amount_difference_to
+                transaction.save()
+
+            bank_id = original_transaction_from.bank.id
+            return redirect('bank_listout', id=bank_id)
+
+        except transactions.DoesNotExist:
+            pass 
+    b = Bankcreation.objects.filter(user=request.user)
+    cp = company_details.objects.get(user=request.user)
+    return render(request, 'banklistout.html', {'company': cp, 'bank': b})
+
+
+
 
 
 

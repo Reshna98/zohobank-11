@@ -249,7 +249,7 @@ class Retaineritems(models.Model):
     rate=models.IntegerField(null=True)
     item=models.ForeignKey(AddItem,on_delete=models.CASCADE,null=True)
 
-##Reshna-banking
+
 ##Reshna-banking
 class Bankcreation(models.Model):
     user=models.ForeignKey(User,on_delete=models.CASCADE)
