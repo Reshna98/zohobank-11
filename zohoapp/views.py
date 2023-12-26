@@ -13812,7 +13812,7 @@ def edit_bank_to_bank_transfer(request, id):
             )
             for transaction in subsequent_transactions_from:
                 print(transaction.id)
-                transaction.balance += amount_difference_from
+                transaction.balance -= amount_difference_from
                 transaction.save()
 
             subsequent_transactions_to = transactions.objects.filter(
@@ -13820,7 +13820,7 @@ def edit_bank_to_bank_transfer(request, id):
             )
             for transaction in subsequent_transactions_to:
                 print(transaction.id)
-                transaction.balance -= amount_difference_to
+                transaction.balance += amount_difference_to
                 transaction.save()
 
             bank_id = original_transaction_from.bank.id
@@ -13854,7 +13854,24 @@ def delete_transaction(request, id):
     transaction = get_object_or_404(transactions, id=id)
     
     bank = transaction.bank
-    bank.balance -= transaction.amount
+    if transaction.adjtype == 'Increase Balance':
+        bank.balance -= transaction.amount
+    elif transaction.adjtype == 'Reduce Balance':
+        bank.balance += transaction.amount
+    elif transaction.type == 'Bank To Cash Transfer':
+        bank.balance += transaction.amount
+    elif transaction.type == 'Cash To Bank Transfer':
+        bank.balance -= transaction.amount
+    elif transaction.type == 'Bank To Bank Transfer':
+        from_bank = Bankcreation.objects.get(name=transaction.fromB)
+        to_bank = Bankcreation.objects.get(name=transaction.toB)
+        
+        from_bank.balance += transaction.amount
+        to_bank.balance -= transaction.amount
+        
+        from_bank.save()
+        to_bank.save()
+
     bank.save()
 
     # Deduct the transaction amount from all transactions related to this bank
@@ -13862,6 +13879,7 @@ def delete_transaction(request, id):
     for related_transaction in related_transactions:
         related_transaction.balance -= transaction.amount
         related_transaction.save()
+
 
     bank_id = transaction.bank.id
     transaction.delete()
