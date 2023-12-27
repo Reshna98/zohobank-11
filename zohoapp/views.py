@@ -13874,7 +13874,7 @@ def delete_transaction(request, id):
 
     bank.save()
 
-    # Deduct the transaction amount from all transactions related to this bank
+  
     related_transactions = transactions.objects.filter(bank=bank).exclude(type="Opening Balance")
     for related_transaction in related_transactions:
         related_transaction.balance -= transaction.amount
