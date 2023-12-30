@@ -13867,9 +13867,9 @@ def delete_transaction(request, id):
 
     # Update subsequent transactions' balances
     for sub_transaction in subsequent_transactions:
-        total_balance_change += sub_transaction.amount
-        sub_transaction.balance = F('balance') - total_balance_change
+        sub_transaction.balance = F('balance') - sub_transaction.amount
         sub_transaction.save()
+
 
     bank_id = transaction.bank.id
     transaction.delete()
