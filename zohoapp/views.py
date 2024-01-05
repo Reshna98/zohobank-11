@@ -13834,55 +13834,6 @@ def edit_bank_to_bank_transfer(request, id):
 
 from django.db.models import F
 
-# def delete_transaction(request, id):
-#     cp = company_details.objects.get(user=request.user)
-#     transaction = get_object_or_404(transactions, id=id)
-    
-#     bank = transaction.bank
-#     if transaction.adjtype == 'Increase Balance':
-#         bank.balance -= transaction.amount
-#     elif transaction.adjtype == 'Reduce Balance':
-#         bank.balance += transaction.amount
-#     elif transaction.type == 'Bank To Cash Transfer':
-#         bank.balance += transaction.amount
-#     elif transaction.type == 'Cash To Bank Transfer':
-#         bank.balance -= transaction.amount
-#     elif transaction.type == 'Bank To Bank Transfer':
-#         from_bank = Bankcreation.objects.get(name=transaction.fromB)
-#         to_bank = Bankcreation.objects.get(name=transaction.toB)
-        
-#         from_bank.balance += transaction.amount
-#         to_bank.balance -= transaction.amount
-        
-#         from_bank.save()
-#         to_bank.save()
-
-#     bank.save()
-
-#     # Fetch subsequent transactions after the current one based on IDs
-#     subsequent_transactions = transactions.objects.filter(bank=bank, id__gt=transaction.id)
-
-#     # Calculate the total change in balance due to the deleted transaction
-#     total_balance_change = transaction.amount
-
-#     # Update subsequent transactions' balances
-#     for sub_transaction in subsequent_transactions:
-#         sub_transaction.balance = F('balance') - sub_transaction.amount
-#         sub_transaction.save()
-
-
-#     bank_id = transaction.bank.id
-#     transaction.delete()
-    
-#     return redirect('bank_listout', id=bank_id)
-
-
-
-
-
-
-from django.db.models import F
-
 def delete_transaction(request, id):
     cp = company_details.objects.get(user=request.user)
     transaction = get_object_or_404(transactions, id=id)
@@ -13908,17 +13859,66 @@ def delete_transaction(request, id):
 
     bank.save()
 
-  
-    related_transactions = transactions.objects.filter(bank=bank).exclude(type="Opening Balance")
-    for related_transaction in related_transactions:
-        related_transaction.balance = F('balance')-transaction.amount
-        related_transaction.save()
+    # Fetch subsequent transactions after the current one based on IDs
+    subsequent_transactions = transactions.objects.filter(bank=bank, id__gt=transaction.id)
+
+    # Calculate the total change in balance due to the deleted transaction
+    total_balance_change = transaction.amount
+
+    # Update subsequent transactions' balances
+    for sub_transaction in subsequent_transactions:
+        sub_transaction.balance = F('balance') - sub_transaction.amount
+        sub_transaction.save()
 
 
     bank_id = transaction.bank.id
     transaction.delete()
     
     return redirect('bank_listout', id=bank_id)
+
+
+
+
+
+
+# from django.db.models import F
+
+# def delete_transaction(request, id):
+#     cp = company_details.objects.get(user=request.user)
+#     transaction = get_object_or_404(transactions, id=id)
+    
+#     bank = transaction.bank
+#     if transaction.adjtype == 'Increase Balance':
+#         bank.balance -= transaction.amount
+#     elif transaction.adjtype == 'Reduce Balance':
+#         bank.balance += transaction.amount
+#     elif transaction.type == 'Bank To Cash Transfer':
+#         bank.balance += transaction.amount
+#     elif transaction.type == 'Cash To Bank Transfer':
+#         bank.balance -= transaction.amount
+#     elif transaction.type == 'Bank To Bank Transfer':
+#         from_bank = Bankcreation.objects.get(name=transaction.fromB)
+#         to_bank = Bankcreation.objects.get(name=transaction.toB)
+        
+#         from_bank.balance += transaction.amount
+#         to_bank.balance -= transaction.amount
+        
+#         from_bank.save()
+#         to_bank.save()
+
+#     bank.save()
+
+  
+#     related_transactions = transactions.objects.filter(bank=bank).exclude(type="Opening Balance")
+#     for related_transaction in related_transactions:
+#         related_transaction.balance = F('balance')-transaction.amount
+#         related_transaction.save()
+
+
+#     bank_id = transaction.bank.id
+#     transaction.delete()
+    
+#     return redirect('bank_listout', id=bank_id)
 
 
 def bank_attachfile(request,id):
