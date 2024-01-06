@@ -13863,11 +13863,11 @@ def delete_transaction(request, id):
     subsequent_transactions = transactions.objects.filter(bank=bank, id__gt=transaction.id)
 
     # Calculate the total change in balance due to the deleted transaction
-    total_balance_change = transaction.amount
+    # total_balance_change = transaction.amount
 
     # Update subsequent transactions' balances
     for sub_transaction in subsequent_transactions:
-        sub_transaction.balance = sub_transaction.balance  - sub_transaction.amount
+        sub_transaction.balance = sub_transaction.balance - sub_transaction.amount
         sub_transaction.save()
 
 
