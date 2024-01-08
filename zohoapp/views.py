@@ -13860,19 +13860,23 @@ def delete_transaction(request, id):
     bank.save()
 
     # Fetch subsequent transactions after the current one based on IDs
-    subsequent_transactions = transactions.objects.filter(bank=bank, id__gt=transaction.id)
+    subsequent_transactions = transactions.objects.filter(bank=bank, id__gt=transaction.id).order_by('id')
 
-    # Calculate the total change in balance due to the deleted transaction
-    # total_balance_change = transaction.amount
+# Calculate the cumulative balance change
+    cumulative_balance_change = transaction.amount
 
-    # Update subsequent transactions' balances
+# Calculate the sum of amounts for subsequent transactions
+    subsequent_total_amount = subsequent_transactions.aggregate(Sum('amount'))['amount__sum'] or 0
+
+# Update subsequent transactions' balances
     for sub_transaction in subsequent_transactions:
-        sub_transaction.balance = sub_transaction.balance - sub_transaction.amount
+        sub_transaction.balance = bank.balance - subsequent_total_amount + cumulative_balance_change
         sub_transaction.save()
+        cumulative_balance_change += sub_transaction.amount
 
 
-    bank_id = transaction.bank.id
-    transaction.delete()
+        bank_id = transaction.bank.id
+        transaction.delete()
     
     return redirect('bank_listout', id=bank_id)
 
