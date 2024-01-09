@@ -13832,7 +13832,7 @@ def edit_bank_to_bank_transfer(request, id):
     cp = company_details.objects.get(user=request.user)
     return render(request, 'banklistout.html', {'company': cp, 'bank': b})
 
-from django.db.models import F
+from django.db.models import Sum
 
 def delete_transaction(request, id):
     cp = company_details.objects.get(user=request.user)
